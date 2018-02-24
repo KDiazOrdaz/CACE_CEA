@@ -1,0 +1,34 @@
+model{
+  for (i in 1:n) {
+    eq5d_b[i] ~  dnorm(qb, pr.qb)
+    
+    y[i,1:3] ~ dmnorm(mu[i,], pr[,])
+    mu[i,1] <- b[1,1] + b[1,2] * rnd[i] 
+    mu[i,2] <- b[2,1] + b[2,2]*b[1,2] * rnd[i] +  c*eq5d_b[i]  
+    mu[i,3] <- b[3,1] + b[3,2]* b[1,2] *rnd[i] +  g*eq5d_b[i]            
+  }
+  #		Priors:
+  pr[1:3,1:3]~dwish(R,3)
+  R<-diag(1,3)
+  
+  for (k in 1:3) {
+    b[k,1:2] ~ dmnorm(vm[],vp[,])
+  }
+  for (k in 1:2) {
+    vm[k] <- 0
+    vp[k,k] <- 0.1 
+  }
+  vp[1,2] <- 0
+  vp[2,1] <- 0
+  pr.qb<- 1 / (qb.sd * qb.sd)
+  qb.sd <- exp(log.qb.sd)
+  log.qb.sd ~ dnorm(0, 0.01)
+  qb ~ dunif(-0.5,1)
+  c ~ dnorm(0, 0.01)
+  g ~ dnorm(0, 0.01)
+  
+  #functionals of the parameters
+  inb<- 30000*b[2,2]-b[3,2] #30000 is the UK willingness to pay, modify as necessary
+  icer<- b[3,2]/(b[2,2]+0.000001) #to avoid dividing by a zero
+  
+}
